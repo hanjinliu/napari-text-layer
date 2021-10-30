@@ -115,7 +115,11 @@ class TextLayerOverview(QWidget):
         frame.setToolTip("Text anchor")
         color_edit.layout().addWidget(frame)
         
-    def _add_text_layer(self):
+        button = QPushButton("New Text Layer", self)
+        self.layout().addWidget(button)
+        button.clicked.connect(self._add_text_layer)
+        
+    def _add_text_layer(self, e=None):
         # Add a new text layer and bind shortcuts.
         layer = Shapes(ndim = 2,
                        shape_type = "rectangle",
@@ -151,7 +155,10 @@ class TextLayerOverview(QWidget):
         def add(layer: Shapes):
             # Add a new shape when Enter is clicked.
             
+            self.layer.selected_data = {}
+            
             # If no shape exists, add a rectangle at (0, 0)
+            
             if layer.nshapes == 0:
                 next_data = np.array([[0, 0],
                                       [0, _MIN_SHAPE_X_SIZE],
@@ -202,11 +209,8 @@ class TextLayerOverview(QWidget):
             layer.text.size = min(_MAX_FONT_SIZE, layer.text.size + 1)
         
         @layer.mouse_double_click_callbacks.append
-        def edit(layer: Shapes, event):
+        def double_clicked(layer: Shapes, event):
             # Enter editing mode with out switching to the selection mode of shapes layer.
-            if layer.nshapes > 1 and layer.mode in ("add_rectangle", "add_ellipse", "add_line"):
-                # These shapes does not need double click to finish editing.
-                layer.data = layer.data[:-1]
                 
             i, _ = layer.get_value(
                 event.position,
