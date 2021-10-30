@@ -1,4 +1,3 @@
-from __future__ import annotations
 from PyQt5.QtWidgets import QHBoxLayout, QPushButton
 import numpy as np
 from qtpy.QtWidgets import QLineEdit, QWidget, QGridLayout, QLabel, QSpinBox
@@ -18,7 +17,7 @@ _MIN_SHAPE_X_SIZE = 16
 _MIN_SHAPE_Y_SIZE = 16
 
 class TextLayerOverview(QWidget):
-    def __init__(self, viewer: napari.Viewer):
+    def __init__(self, viewer: napari.viewer.Viewer):
         super().__init__()
         self.viewer = viewer
         self._add_text_layer()
