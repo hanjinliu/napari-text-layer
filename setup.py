@@ -17,7 +17,7 @@ setup(
     author_email="liuhanjin-sc@g.ecc.u-tokyo.ac.jp",
     license="BSD 3-Clause",
     download_url="https://github.com/hanjinliu/napari-text-layer",
-    entry_points={"napari.plugin": "napari_text_layer"},
+    entry_points={"napari.plugin": "napari-text-layer = napari_text_layer"},
     packages=find_packages(),
     python_requires=">=3.7",
     )
