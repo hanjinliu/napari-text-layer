@@ -18,7 +18,7 @@ _MIN_SHAPE_X_SIZE = 16
 _MIN_SHAPE_Y_SIZE = 16
 
 class TextLayerOverview(QWidget):
-    def __init__(self, viewer: "napari.Viewer"):
+    def __init__(self, viewer: napari.Viewer):
         super().__init__()
         self.viewer = viewer
         self._add_text_layer()
