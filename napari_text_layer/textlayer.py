@@ -1,5 +1,5 @@
 from __future__ import annotations
-from PyQt5.QtWidgets import QHBoxLayout
+from PyQt5.QtWidgets import QHBoxLayout, QPushButton
 import numpy as np
 from qtpy.QtWidgets import QLineEdit, QWidget, QGridLayout, QLabel, QSpinBox
 from qtpy import QtGui, QtCore
@@ -26,40 +26,103 @@ class TextLayerOverview(QWidget):
         self.layout().setAlignment(QtCore.Qt.AlignTop)
         
         # set color edit
-        self._color_edit = QColorSwatchEdit(self, 
-                                            initial_color=_INITIAL_TEXT_COLOR, 
-                                            tooltip="Select text color")
         
-        @self._color_edit.color_changed.connect
+        color_edit = QColorSwatchEdit(self, 
+                                      initial_color=_INITIAL_TEXT_COLOR, 
+                                      tooltip="Select text color")
+        
+        @color_edit.color_changed.connect
         def _(color: np.ndarray):
             self.layer.text.color = color
-        self.layout().addWidget(self._color_edit)
+        self.layout().addWidget(color_edit)
         
-        # set spin box
-        self._spinbox = QSpinBox(self)
-        self._spinbox.setRange(_MIN_FONT_SIZE, _MAX_FONT_SIZE)
-        self._spinbox.setValue(_INITIAL_FONT_SIZE)
-        
-        @self._spinbox.valueChanged.connect
-        def _(e):
-            size = self._spinbox.value()
-            self.layer.text.size = size
+        # set a spin box for font size
         
         frame = QWidget(self)
         frame.setLayout(QHBoxLayout())
+        frame.layout().setContentsMargins(0, 0, 0, 0)
+        
+        self._font_size_spinbox = QSpinBox(frame)
+        self._font_size_spinbox.setRange(_MIN_FONT_SIZE, _MAX_FONT_SIZE)
+        self._font_size_spinbox.setValue(_INITIAL_FONT_SIZE)
+        
+        @self._font_size_spinbox.valueChanged.connect
+        def _(e):
+            size = self._font_size_spinbox.value()
+            self.layer.text.size = size
+        
         frame.layout().addWidget(QLabel("font size", frame))
-        frame.layout().addWidget(self._spinbox)
+        frame.layout().addWidget(self._font_size_spinbox)
         self.layout().addWidget(frame)
         
+        # set a spin box for rotation
+        
+        frame = QWidget(self)
+        frame.setLayout(QHBoxLayout())
+        frame.layout().setContentsMargins(0, 0, 0, 0)
+        
+        self._rot_spin_box = QSpinBox(frame)
+        self._rot_spin_box.setRange(-180, 180)
+        self._rot_spin_box.setValue(0)
+        self._rot_spin_box.setSingleStep(5)
+        
+        @self._rot_spin_box.valueChanged.connect
+        def _(e):
+            deg = self._rot_spin_box.value()
+            self.layer.text.rotation = deg
+        
+        frame.layout().addWidget(QLabel("text rotation", frame))
+        frame.layout().addWidget(self._rot_spin_box)
+        self.layout().addWidget(frame)
+        
+        # set buttons for anchor position, and add it to color edit layout
+        
+        frame = QWidget(self)
+        frame.setLayout(QGridLayout())
+        frame.layout().setContentsMargins(0, 0, 0, 0)
+        frame.setFixedWidth(frame.height()*2)
+        self._button_ul = QPushButton("◤", frame)
+        self._button_ur = QPushButton("◥", frame)
+        self._button_ll = QPushButton("◣", frame)
+        self._button_lr = QPushButton("◢", frame)
+        self._button_ct = QPushButton("●", frame)
+        
+        frame.layout().addWidget(self._button_ul, 0, 0, 2, 2)
+        frame.layout().addWidget(self._button_ur, 0, 2, 2, 2)
+        frame.layout().addWidget(self._button_ll, 2, 0, 2, 2)
+        frame.layout().addWidget(self._button_lr, 2, 2, 2, 2)
+        frame.layout().addWidget(self._button_ct, 1, 1, 2, 2)
+        
+        @self._button_ul.clicked.connect
+        def _(e):
+            self.layer.text.anchor = "upper_left"
+            
+        @self._button_ur.clicked.connect
+        def _(e):
+            self.layer.text.anchor = "upper_right"
+            
+        @self._button_ll.clicked.connect
+        def _(e):
+            self.layer.text.anchor = "lower_left"
+            
+        @self._button_lr.clicked.connect
+        def _(e):
+            self.layer.text.anchor = "lower_right"
+            
+        @self._button_ct.clicked.connect
+        def _(e):
+            self.layer.text.anchor = "center"
+        
+        frame.setToolTip("Text anchor")
+        color_edit.layout().addWidget(frame)
+        
     def _add_text_layer(self):
+        # Add a new text layer and bind shortcuts.
         layer = Shapes(ndim=2,
                        shape_type="rectangle",
                        name="Text Layer",
                        properties={_TEXT_SYMBOL: np.array([""], dtype="<U32")},
                        blending = "additive",
-                       edge_width=2.0,
-                       face_color=[0, 0, 0, 0],
-                       edge_color=[0, 0, 0, 0],
                        opacity=1,
                        text={"text": "{" + _TEXT_SYMBOL + "}", 
                              "size": _INITIAL_FONT_SIZE,
@@ -80,33 +143,39 @@ class TextLayerOverview(QWidget):
                 i = selected[-1]
             data = layer.data[i]
             center = np.mean(data, axis=0)
-            screen_coords = _world_to_screen_coords(center, self.viewer)
+            screen_coords = _get_data_coords_in_screen(center, self.viewer)
             self._enter_editing_mode(i, screen_coords)
             
-        @layer.bind_key("Alt-A", overwrite=True)
-        def select_all(layer: Shapes):
-            layer.selected_data = set(np.arange(layer.nshapes))
-            layer._set_highlight()
-        
         @layer.bind_key("Enter", overwrite=True)
         def add(layer: Shapes):
+            # Add a new shape when Enter is clicked.
+            
+            # If no shape exists, add a rectangle at (0, 0)
             if layer.nshapes == 0:
                 next_data = np.array([[0, 0],
                                       [0, _MIN_SHAPE_X_SIZE],
                                       [_MIN_SHAPE_Y_SIZE, _MIN_SHAPE_X_SIZE],
                                       [_MIN_SHAPE_Y_SIZE, 0]])
+                layer.add_rectangles(next_data)
+            
+            # If one shape exists, add the last shape at almost the same position.
             elif layer.nshapes == 1:
                 next_data = layer.data[-1].copy()
                 next_data[:, -2] += _MIN_SHAPE_Y_SIZE
                 next_data[:, -1] += _MIN_SHAPE_X_SIZE
+                layer.add(next_data, shape_type=layer.shape_type[-1])
+            
+            # If more, add the last shape in the same direction.
             else:
-                next_data = 2 * layer.data[-1] - layer.data[-2]
+                # TODO: sometimes new_data will be outside the canvas
+                dr = np.mean(layer.data[-1], axis=0) - np.mean(layer.data[-2], axis=0)
+                next_data = layer.data[-1] + dr
+                layer.add(next_data, shape_type=layer.shape_type[-1])
                 
-            layer.add_rectangles(next_data)
             center = np.mean(next_data, axis=0)
-            screen_coords = _world_to_screen_coords(center, self.viewer)
+            screen_coords = _get_data_coords_in_screen(center, self.viewer)
             self._enter_editing_mode(-1, screen_coords)
-        
+                
         @layer.bind_key("Left", overwrite=True)
         def left(layer: Shapes):
             _translate_shape(layer, -1, -1)
@@ -133,9 +202,11 @@ class TextLayerOverview(QWidget):
         
         @layer.mouse_double_click_callbacks.append
         def edit(layer: Shapes, event):
-            if layer.mode.startswith("add_"):
+            # Enter editing mode with out switching to the selection mode of shapes layer.
+            if layer.nshapes > 1 and layer.mode in ("add_rectangle", "add_ellipse", "add_line"):
+                # These shapes does not need double click to finish editing.
                 layer.data = layer.data[:-1]
-            self.layer.current_properties = {_TEXT_SYMBOL: np.array([""], dtype="<U32")}
+                
             i, _ = layer.get_value(
                 event.position,
                 view_direction=event.view_direction,
@@ -149,14 +220,14 @@ class TextLayerOverview(QWidget):
         
         @layer.mouse_drag_callbacks.append
         def _(layer: Shapes, e):
-            if layer.mode not in ("add_rectangle", "add_ellipse"):
+            if layer.mode not in ("add_rectangle", "add_ellipse", "add_line"):
                 return
-            x0, y0 = _get_xy(self.viewer)
+            x0, y0 = _get_mouse_coords_in_screen(self.viewer)
             yield
             while e.type == "mouse_move":
                 # Nothing happens while dragging
                 yield
-            x1, y1 = _get_xy(self.viewer)
+            x1, y1 = _get_mouse_coords_in_screen(self.viewer)
             
             # Enlarge shape if it is too small
             data = layer.data
@@ -183,15 +254,15 @@ class TextLayerOverview(QWidget):
         return None
 
     def _enter_editing_mode(self, i: int, position: tuple[int, int] = None):
-        
+        # Create a line edit at the position of shape and enter text editing mode.
+        self.layer.current_properties = {_TEXT_SYMBOL: np.array([""], dtype="<U32")}
         if position is not None:
             x, y = position
         else:
-            x, y = _get_xy(self.viewer)
+            x, y = _get_mouse_coords_in_screen(self.viewer)
         
         # Create a line edit widget and set geometry
         line = QLineEdit(self.viewer.window._qt_window)
-        self.line = line
         edit_geometry = line.geometry()
         edit_geometry.setWidth(140)
         edit_geometry.moveLeft(x)
@@ -214,12 +285,11 @@ class TextLayerOverview(QWidget):
         @line.editingFinished.connect
         def _():
             line.setHidden(True)
-            self.line = None
             line.deleteLater()
         
         return None
     
-def _get_xy(viewer: "napari.Viewer"):
+def _get_mouse_coords_in_screen(viewer: "napari.Viewer"):
     window_geo = viewer.window._qt_window.geometry()
     pos = QtGui.QCursor().pos()
     x = pos.x() - window_geo.x()
@@ -237,7 +307,7 @@ def _translate_shape(layer: Shapes, ind: int, direction: int):
     layer._set_highlight()
     return None
 
-def _world_to_screen_coords(coords, viewer: "napari.Viewer"):
+def _get_data_coords_in_screen(coords, viewer: "napari.Viewer"):
     dr = viewer.window._qt_window.centralWidget().geometry()
     w = dr.width()
     h = dr.height()
