@@ -117,16 +117,18 @@ class TextLayerOverview(QWidget):
         
     def _add_text_layer(self):
         # Add a new text layer and bind shortcuts.
-        layer = Shapes(ndim=2,
-                       shape_type="rectangle",
-                       name="Text Layer",
-                       properties={_TEXT_SYMBOL: np.array([""], dtype="<U32")},
-                       blending = "additive",
-                       opacity=1,
-                       text={"text": "{" + _TEXT_SYMBOL + "}", 
-                             "size": _INITIAL_FONT_SIZE,
-                             "color": _INITIAL_TEXT_COLOR,
-                             "anchor": "center"}
+        layer = Shapes(ndim = 2,
+                       shape_type = "rectangle",
+                       name = "Text Layer",
+                       properties = {_TEXT_SYMBOL: np.array([""], dtype="<U32")},
+                       face_color = "transparent",
+                       edge_color = "transparent",
+                       blending  =  "additive",
+                       opacity = 1,
+                       text = dict(text = "{" + _TEXT_SYMBOL + "}", 
+                                   size = _INITIAL_FONT_SIZE,
+                                   color = _INITIAL_TEXT_COLOR,
+                                   anchor = "center")
                        )
         layer.mode = "add_rectangle"
         self.layer = layer
