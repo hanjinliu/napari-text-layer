@@ -5,6 +5,14 @@ Napari text layer for bio-image annotation.
 ![](GIFs/annot.gif)
 ![](GIFs/age.gif)
 
+### Installation
+
+You can install using pip:
+
+```
+pip install napari-text-layer
+```
+
 ### Keybindings and mouse callbacks
 
 - "&rarr;", "&larr;", "&uarr;", "&darr;" ... Move selected shapes by 1 pixel.
