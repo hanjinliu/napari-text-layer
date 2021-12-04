@@ -19,5 +19,12 @@ setup(
     download_url="https://github.com/hanjinliu/napari-text-layer",
     entry_points={"napari.plugin": "napari-text-layer = napari_text_layer"},
     packages=find_packages(),
+    classifiers=["Framework :: napari",
+                 "Programming Language :: Python",
+                 "Programming Language :: Python :: 3",
+                 "Programming Language :: Python :: 3.7",
+                 "Programming Language :: Python :: 3.8",
+                 "Programming Language :: Python :: 3.9",
+                 ],
     python_requires=">=3.7",
     )
