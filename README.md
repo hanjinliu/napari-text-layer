@@ -3,6 +3,7 @@
 Napari text layer for bio-image annotation.
 
 ![](GIFs/annot.gif)
+
 ![](GIFs/age.gif)
 
 ### Installation
