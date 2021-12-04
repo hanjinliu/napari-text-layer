@@ -1,6 +1,5 @@
-from PyQt5.QtWidgets import QHBoxLayout, QPushButton
 import numpy as np
-from qtpy.QtWidgets import QLineEdit, QWidget, QGridLayout, QLabel, QSpinBox
+from qtpy.QtWidgets import QLineEdit, QWidget, QGridLayout, QLabel, QSpinBox, QHBoxLayout, QPushButton
 from qtpy import QtGui, QtCore
 import napari
 from napari._qt.widgets.qt_color_swatch import QColorSwatchEdit
