@@ -2,9 +2,9 @@
 
 Napari text layer for bio-image annotation.
 
-![](GIFs/annot.gif)
+![](https://github.com/hanjinliu/napari-text-layer/raw/main/GIFs/annot.gif)
 
-![](GIFs/age.gif)
+![](https://github.com/hanjinliu/napari-text-layer/raw/main/GIFs/age.gif)
 
 ### Installation
 
