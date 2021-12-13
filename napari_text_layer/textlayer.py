@@ -293,6 +293,7 @@ class TextLayerOverview(QWidget):
         
         return None
     
+    
 def _get_mouse_coords_in_screen(viewer: "napari.Viewer"):
     window_geo = viewer.window._qt_window.geometry()
     pos = QtGui.QCursor().pos()
@@ -311,6 +312,7 @@ def _translate_shape(layer: Shapes, ind: int, direction: int):
     layer._set_highlight()
     return None
 
+
 def _get_data_coords_in_screen(coords, viewer: "napari.Viewer"):
     dr = viewer.window._qt_window.centralWidget().geometry()
     w = dr.width()
@@ -318,6 +320,7 @@ def _get_data_coords_in_screen(coords, viewer: "napari.Viewer"):
     canvas_center = np.array([dr.y(), dr.x()]) + np.array([h, w])/2
     crds = canvas_center + (coords - viewer.camera.center[-2:])* viewer.camera.zoom
     return crds.astype(int)[::-1]
+
 
 @napari_hook_implementation
 def napari_experimental_provide_dock_widget():
